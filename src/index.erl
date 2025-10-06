@@ -7,7 +7,10 @@
 -include_lib("nitrogen/include/nitrogen.hrl").
 -endif.
 
-main() -> #template { file="./priv/templates/bare.html" }.
+main() -> #template { file=template_path() }.
+
+template_path() ->
+    filename:join([code:priv_dir(journal), "templates", "bare.html"]).
 
 title() -> "Welcome to journal".
 
@@ -36,7 +39,7 @@ event(click) ->
         _ ->
             {{Y, M, D}, {H, Min, S}} = calendar:now_to_universal_time(os:timestamp()),
             ensure_journal_dir(),
-            Filename = io_lib:format("priv/journal/journal_~4..0B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0B.txt", [Y, M, D, H, Min, S]),
+            Filename = io_lib:format("~s/journal_~4..0B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0B.txt", [journal_dir(), Y, M, D, H, Min, S]),
             ok = write_to_file(Filename, Trimmed),
             wf:replace(entries_panel, #panel { id=entries_panel, body=journal_entries_elements() }),
             %% Clear textbox by updating its value attribute via direct script (simpler than #set when unavailable)
@@ -52,7 +55,7 @@ write_to_file(Filename, Content) ->
 %% Fetch journal entries from files matching journal_*.txt
 journal_entries_elements() ->
     ensure_journal_dir(),
-    Pattern = "priv/journal/journal_*.txt",
+    Pattern = filename:join(journal_dir(), "journal_*.txt"),
     case filelib:wildcard(Pattern) of
         [] -> [#p { text="No entries yet." }];
         Files ->
@@ -72,11 +75,13 @@ parse_journal_file(Filename) ->
         nomatch -> false
     end.
 
+journal_dir() -> filename:join([code:priv_dir(journal), "journal"]).
+
 ensure_journal_dir() ->
-    Dir = "priv/journal",
+    Dir = journal_dir(),
     case file:read_file_info(Dir) of
         {ok, _} -> ok;
-        {error, enoent} -> file:make_dir("priv"), file:make_dir(Dir), ok;
+        {error, enoent} -> file:make_dir(Dir), ok;
         _ -> ok
     end.
 
