@@ -1,0 +1,9 @@
+{application, journal,
+ [
+  {description, "My Nitrogen Web Project"},
+  {vsn, "1"},
+  {registered, []},
+    {applications, [kernel, stdlib, crypto, inets, ssl, nitrogen_core, simple_bridge, nprocreg, nitro_cache]},
+  {mod, { journal_app, []}},
+  {env, []}
+ ]}.
